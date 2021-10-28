@@ -1,8 +1,30 @@
 <resources>
     <string name="app_name">Zip File Download</string>
-
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-
     <string name="action_settings">Settings</string>
+
+    <string-array name="station">
+        <item>station1</item>
+        <item>station2</item>
+        <item>station3</item>
+    </string-array>
+
+    <string-array name="prixGo">
+        <item>1.5</item>
+        <item>1.6</item>
+        <item>1.7</item>
+    </string-array>
+
+    <string-array name="prixSP95">
+        <item>1.0</item>
+        <item>1.1</item>
+        <item>1.2</item>
+    </string-array>
+
+    <string-array name="prixSP98">
+        <item>2.0</item>
+        <item>2.1</item>
+        <item>2.2</item>
+    </string-array>
 </resources>

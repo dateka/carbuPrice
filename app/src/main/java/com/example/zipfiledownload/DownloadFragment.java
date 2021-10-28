@@ -1,5 +1,6 @@
 package com.example.zipfiledownload;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,33 +30,41 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class DownloadFragment extends Fragment {
+public class DownloadFragment extends Fragment implements FileDownloadInterface{
+
     interface DownloadCallbacks {
         void onPostExecute(String msg);
     }
 
     private DownloadCallbacks mCallbacks;
     private DownloadTask mTask;
-
+    Activity activity;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true); // Retain this fragment across configuration changes.
 
-        File gameDir = new File("/data/data/" + getActivity().getPackageName() + "/games");
+        File gameDir = new File("/data/data/" + getActivity().getPackageName() + "/file");
         gameDir.mkdirs();
 
         // Create and execute the background task.
         mTask = new DownloadTask();
-        mTask.execute("https://www.data.gouv.fr/fr/datasets/r/087dfcbc-8119-4814-8412-d0a387fac561", "/data/data/" + getActivity().getPackageName() + "/games/2048.zip");
+        mTask.execute("https://www.data.gouv.fr/fr/datasets/r/087dfcbc-8119-4814-8412-d0a387fac561", "/data/data/" + getActivity().getPackageName() + "/file/2048.zip");
     }
-
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         mCallbacks = (DownloadCallbacks) getActivity();
+        if(context instanceof Activity){
+            activity = (Activity) context;
+        }
+    }
+
+    @Override
+    public String GetUnzipFilePath(String filePath) {
+        return filePath;
     }
 
     @Override
@@ -97,7 +106,6 @@ public class DownloadFragment extends Fragment {
             e.printStackTrace();
             return false;
         }
-
         return true;
     }
 
@@ -143,7 +151,6 @@ public class DownloadFragment extends Fragment {
                         input.close();
                 } catch (IOException ignored) {
                 }
-
                 if (connection != null)
                     connection.disconnect();
             }
@@ -154,14 +161,19 @@ public class DownloadFragment extends Fragment {
             Log.d("DownloadFragment ", "f.getName()=" + f.getName().replace(".zip", ""));
             //unpackZip(f.getParentFile().getPath(), f.getName().replace(".zip", ""));
             boolean test = unpackZip(destinationFilePath);
+
+            try{
+                ((FileDownloadInterface) activity).GetUnzipFilePath("/data/data/com.example.zipfiledownload/file/PrixCarburants_instantane.xml");
+            }catch (ClassCastException ignored) {}
+
             // ------------------------------------------- IMPOTANT ----------------------------------
-            if(test){
+            /*if(test){
                 DocumentBuilderFactory factory	=	DocumentBuilderFactory.newInstance();
                 DocumentBuilder builder	= null;
 
                 try {
                     builder = factory.newDocumentBuilder();
-                    Document dom	=	builder.parse(new	FileInputStream("/data/data/com.example.zipfiledownload/games/PrixCarburants_instantane.xml"));
+                    Document dom	=	builder.parse(new	FileInputStream("/data/data/com.example.zipfiledownload/file/PrixCarburants_instantane.xml"));
                     Element root	=	dom.getDocumentElement();
                     NodeList items	= root.getElementsByTagName("pdv");
 
@@ -175,9 +187,9 @@ public class DownloadFragment extends Fragment {
                 } catch (ParserConfigurationException | SAXException | IOException e) {
                     e.printStackTrace();
                 }
-            }
+            }*/
             // ------------------------------------------- FIN IMPOTANT ----------------------------------
-            return "Download Completed!";
+            return "Download complete !";
         }
 
         @Override

@@ -10,6 +10,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -21,8 +23,20 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, DownloadFragment.DownloadCallbacks {
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DownloadFragment.DownloadCallbacks, FileDownloadInterface {
 
     private int REQUEST_PERMISSIONS = 100;
     String PERMISSIONS_REQUIRED[] = new String[]{
@@ -31,6 +45,11 @@ public class MainActivity extends AppCompatActivity
 
     private static final String DOWNLOAD_FRAGMENT = "download_fragment";
     private DownloadFragment downloadFragment;
+    RecyclerView recyclerView;
+    String s1[];
+    String s2[];
+    String s3[];
+    String s4[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +58,18 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        s1 = getResources().getStringArray(R.array.station);
+        s2 = getResources().getStringArray(R.array.prixGo);
+        s3 = getResources().getStringArray(R.array.prixSP95);
+        s4 = getResources().getStringArray(R.array.prixSP98);
+
+        recyclerView = (RecyclerView) findViewById(R.id.fragment_main_recycler_view);
+
+        MyAdapter myAdapter = new MyAdapter(this, s1, s2, s3, s4);
+        recyclerView.setAdapter(myAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+       FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -52,12 +82,43 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
         ActivityCompat.requestPermissions(this, PERMISSIONS_REQUIRED, REQUEST_PERMISSIONS);
+
+        // Téléchargement du fichier des carburants à l'ouverture de l'application
+        FragmentManager fm = getSupportFragmentManager();
+        downloadFragment = (DownloadFragment) fm.findFragmentByTag(DOWNLOAD_FRAGMENT);
+        // if it's null, it was created, otherwise it was created and retained
+        if (downloadFragment == null) {
+            downloadFragment = new DownloadFragment();
+            fm.beginTransaction().add(downloadFragment, DOWNLOAD_FRAGMENT).commit();
+        }
+    }
+
+    public String GetUnzipFilePath(String filePath) {
+
+        DocumentBuilderFactory factory	=	DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder	= null;
+
+        try {
+            builder = factory.newDocumentBuilder();
+            Document dom	=	builder.parse(new FileInputStream(filePath));
+            Element root	=	dom.getDocumentElement();
+            NodeList items	= root.getElementsByTagName("pdv");
+
+            for	(int	i	=	0;	i	<	items.getLength();	i++) {
+
+                Node item = items.item(i);
+                String id = item.getAttributes().getNamedItem("id").getNodeValue();
+                int nbtt = items.getLength();
+                String tt ="";
+            }
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
+        return "message";
     }
 
     @Override
@@ -76,17 +137,15 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.download_manager) {
-            downloadByDownloadManager("https://www.data.gouv.fr/fr/datasets/r/087dfcbc-8119-4814-8412-d0a387fac561", "doodle_jump.zip");
-        } else if (id == R.id.async_fragment_download) {
-            FragmentManager fm = getSupportFragmentManager();
+        if (id == R.id.async_fragment_download) {
+            /*FragmentManager fm = getSupportFragmentManager();
             downloadFragment = (DownloadFragment) fm.findFragmentByTag(DOWNLOAD_FRAGMENT);
 
             // if it's null, it was created, otherwise it was created and retained
             if (downloadFragment == null) {
                 downloadFragment = new DownloadFragment();
                 fm.beginTransaction().add(downloadFragment, DOWNLOAD_FRAGMENT).commit();
-            }
+            }*/
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -94,23 +153,9 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void downloadByDownloadManager(String url, String outputFileName) {
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        request.setDescription("A zip package with some files");
-        request.setTitle("Zip package");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.allowScanningByMediaScanner();
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, outputFileName);
-
-        Log.d("MainActivity: ", "download folder>>>>" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath());
-
-        // get download service and enqueue file
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        manager.enqueue(request);
-    }
-
+    //Message apres le download
     public void onPostExecute(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Mis à jour de l'API effectué", Toast.LENGTH_SHORT).show();
         removeDownloadFragment();
     }
 
@@ -123,5 +168,4 @@ public class MainActivity extends AppCompatActivity
                     .commit();
         }
     }
-
 }
