@@ -98,22 +98,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public String GetUnzipFilePath(String filePath) {
-
         DocumentBuilderFactory factory	=	DocumentBuilderFactory.newInstance();
         DocumentBuilder builder	= null;
-
         try {
             builder = factory.newDocumentBuilder();
             Document dom	=	builder.parse(new FileInputStream(filePath));
             Element root	=	dom.getDocumentElement();
             NodeList items	= root.getElementsByTagName("pdv");
 
-            for	(int	i	=	0;	i	<	items.getLength();	i++) {
-
+            for	(int i = 0;	i <	items.getLength(); i++) {
                 Node item = items.item(i);
                 String id = item.getAttributes().getNamedItem("id").getNodeValue();
-                int nbtt = items.getLength();
-                String tt ="";
+                String latitude = item.getAttributes().getNamedItem("latitude").getNodeValue();
+                String Longitude = item.getAttributes().getNamedItem("longitude").getNodeValue();
+                NodeList prices = item.getChildNodes();
+
+                for(int a = 0; a < prices.getLength(); a++){
+                    Node AllChild = prices.item(a);
+                    String test = AllChild.getNodeName();
+                    if(AllChild.getNodeName().contains("prix")) {
+                        if (AllChild.getAttributes().getNamedItem("nom").getNodeValue().contains("Gazole")) {
+                            String priceGo = AllChild.getAttributes().getNamedItem("valeur").getNodeValue();
+                            String tt = "";
+                        }
+                        if (AllChild.getAttributes().getNamedItem("nom").getNodeValue().contains("SP98")) {
+                            String priceSP98 = AllChild.getAttributes().getNamedItem("valeur").getNodeValue();
+                        }
+                        if (AllChild.getAttributes().getNamedItem("nom").getNodeValue().contains("SP95")) {
+                            String priceSP95 = AllChild.getAttributes().getNamedItem("valeur").getNodeValue();
+                        }
+                    }
+                }
             }
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
